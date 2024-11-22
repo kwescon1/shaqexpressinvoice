@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<ruleset name="ShaqExpress Coding Standard">
+    <description>Custom coding standards for ShaqExpress project</description>
+
+    <!-- Include all PSR12 rules -->
+    <rule ref="PSR12" />
+
+    <!-- Set the PHP version to 8.2 and above -->
+    <config name="php_version" value="80200"/>
+
+    <!-- Exclude vendor directory -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+
+    <!-- Exclude specific files -->
+    <exclude-pattern>*/tests/Pest.php</exclude-pattern>
+
+    <!-- Exclude the multiple trait use rule from PSR-12 -->
+    <rule ref="PSR12.Traits.UseDeclaration.MultipleImport">
+        <exclude name="PSR12.Traits.UseDeclaration.MultipleImport" />
+    </rule>
+
+    <!-- Exclude MissingParentheses rule-->
+    <rule ref="PSR12.Classes.ClassInstantiation.MissingParentheses">
+        <exclude name="PSR12.Classes.ClassInstantiation.MissingParentheses" />
+    </rule>
+
+    <!-- Exclude specific spacing rules -->
+    <rule ref="PSR12.Operators.OperatorSpacing.NoSpaceAfter">
+         <exclude name="PSR12.Operators.OperatorSpacing.NoSpaceAfter" />
+    </rule>
+
+    <!-- Exclude specific spacing rules for NoSpaceBefore as well -->
+    <rule ref="PSR12.Operators.OperatorSpacing.NoSpaceBefore">
+        <exclude name="PSR12.Operators.OperatorSpacing.NoSpaceBefore" />
+    </rule>
+
+    <rule ref="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine">
+        <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine" />
+    </rule>
+
+    <rule ref="Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore">
+        <exclude name="Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore" />
+    </rule>
+
+
+    <!-- Increase line length to 150 characters -->
+<rule ref="Generic.Files.LineLength">
+    <properties>
+        <property name="lineLimit" value="200"/>
+        <property name="absoluteLineLimit" value="0"/>
+        <property name="ignoreComments" value="true"/>
+    </properties>
+</rule>
+
+    <!-- Custom rules for tests: Exclude non-camel case method names in tests -->
+    <rule ref="PSR1.Methods.CamelCapsMethodName.NotCamelCaps">
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
+
+    <!-- Exclude Useless Overriding Method in tests -->
+    <rule ref="Generic.CodeAnalysis.UselessOverridingMethod">
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
+
+    <!-- Set tab width to 4 spaces -->
+    <arg name="tab-width" value="4"/>
+
+    <!-- Show progress and sniff codes -->
+    <arg value="p"/>
+    <arg value="s"/>
+</ruleset>
