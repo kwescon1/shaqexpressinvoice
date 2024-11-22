@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
 
     /*
@@ -176,6 +178,18 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+        'timezone' => [
+            'valid_timezone' => 'The :attribute must be a valid timezone.',
+        ],
+        'email_domain' => [
+            'unauthorized_provider' => 'The :attribute belongs to an unauthorized email provider.',
+            'missing_at_symbol' => 'The :attribute must contain an "@" symbol.',
+        ],
+        'no_blank_characters' => 'The :attribute field cannot contain blank characters.',
+        'file' => [
+            'max_uploads' => 'The :attribute field allows a maximum upload of :max items',
+        ],
+        'json_content_type_required' => 'Invalid Content-Type. Only :type is accepted.',
     ],
 
     /*
