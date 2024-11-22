@@ -9,7 +9,7 @@ arch()->preset()->php();
 arch()->preset()->security()->ignoring('assert');
 // ->ignoring('App\Jobs\PerformDatabaseBackupJob'); // ignoring because of exec function;
 
-arch()->preset()->laravel()->ignoring(['App\Providers\AppServiceProvider', 'App\Http\Controllers']);
+arch()->preset()->laravel()->ignoring([App\Providers\AppServiceProvider::class, 'App\Http\Controllers']);
 
 arch('strict types')
     ->expect('App')
@@ -20,7 +20,7 @@ arch('avoid open for extension')
     ->classes()
     ->toBeFinal()
     ->ignoring([
-        'App\Providers\TelescopeServiceProvider',
+        App\Providers\TelescopeServiceProvider::class,
         'App\Models\Base',
     ]);
 
@@ -44,7 +44,7 @@ arch('avoid mutation')
         'App\Models',
         'App\Notifications',
         'App\Providers',
-        'App\Providers\TelescopeServiceProvider',
+        App\Providers\TelescopeServiceProvider::class,
     ]);
 
 arch('avoid inheritance')
