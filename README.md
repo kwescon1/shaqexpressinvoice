@@ -75,8 +75,8 @@ shaqexpressinvoice/
     MAIL_FROM_ADDRESS=
     MAIL_FROM_NAME="Shaq Express"
 
-    ADMIN_SEED_PASSWORD=securepassword
-    ADMIN_EMAIL=admin@shaqexpress.com
+    ADMIN_EMAIL=
+    ADMIN_PASSWORD=
     ```
 
 ### Step 3: Full Setup
