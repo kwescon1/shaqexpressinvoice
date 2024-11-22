@@ -24,4 +24,5 @@ return [
     'validation_failed' => 'Validation failed!',
     'unexpected_error' => 'An unexpected error occurred',
     'access_denied' => 'Access Denied!',
+    'login_successful' => 'Login Successful!',
 ];
