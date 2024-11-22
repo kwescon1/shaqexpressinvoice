@@ -1,0 +1,149 @@
+networks:
+    shaqexpressinvoice:
+        driver: "bridge"
+
+services:
+    # PHP-FPM service
+    app:
+        build:
+            context: .
+            dockerfile: ./docker-files/php/8.2/Dockerfile
+        container_name: shaqexpress
+        restart: unless-stopped
+        tty: true
+        working_dir: /var/www/shaqexpressinvoice
+        depends_on:
+            - db
+            - redis
+        volumes:
+            - ./:/var/www/shaqexpressinvoice
+            - ./docker-files/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        networks:
+            - shaqexpressinvoice
+
+    # Queue worker
+    queue-worker:
+        build:
+            context: .
+            dockerfile: ./docker-files/php/8.2/Dockerfile
+        container_name: shaqexpressinvoice_queue_worker
+        restart: unless-stopped
+        tty: true
+        working_dir: /var/www/shaqexpressinvoice
+        command: php artisan queue:work --tries=3 --timeout=90
+        depends_on:
+            - app
+            - redis
+            - db
+        volumes:
+            - ./:/var/www/shaqexpressinvoice
+            - ./docker-files/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        networks:
+            - shaqexpressinvoice
+
+    # Nginx webserver
+    shaqexpressinvoice_webserver:
+        build:
+            context: .
+            dockerfile: ./docker-files/nginx/Dockerfile
+        container_name: shaqexpressinvoice_webserver
+        restart: unless-stopped
+        depends_on:
+            - db
+            - app
+        ports:
+            - "8902:80"
+            - "8903:443"
+        volumes:
+            - ./:/var/www/shaqexpressinvoice
+            - ./docker-files/nginx/conf.d/app.conf:/etc/nginx/conf.d/app.conf
+            # Mount SSL certificates
+            - ./docker-files/nginx/certs/localhost+2.pem:/etc/nginx/certs/localhost+2.pem
+            - ./docker-files/nginx/certs/localhost+2-key.pem:/etc/nginx/certs/localhost+2-key.pem
+            # Mount local directory for Nginx logs
+            - ./storage/logs/nginx:/var/log/nginx
+        networks:
+            - shaqexpressinvoice
+
+    # Database service (MySQL)
+    db:
+        platform: linux/amd64
+        container_name: shaqexpressinvoice_db
+        image: mysql:latest
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+        restart: always
+        tty: true
+        ports:
+            - "8904:3306"
+        volumes:
+            - ./storage/dbdata:/var/lib/mysql
+            - ./docker-files/mysql/mysql.cnf:/etc/mysql/mysql.cnf
+        networks:
+            - shaqexpressinvoice
+
+    # Database management interface (Adminer)
+    adminer:
+        container_name: shaqexpressinvoice_adminer
+        image: adminer:latest
+        restart: always
+        ports:
+            - "9002:8080"
+        networks:
+            - shaqexpressinvoice
+
+    # Redis service
+    redis:
+        container_name: shaqexpressinvoice_redis
+        image: redis:alpine
+        env_file:
+            - .env
+        ports:
+            - "8906:6379"
+        volumes:
+            - ./storage/redis/data:/data
+        networks:
+            - shaqexpressinvoice
+
+    # Cron job service
+    cron-job:
+        build:
+            context: .
+            dockerfile: ./docker-files/cron/Dockerfile
+        container_name: shaqexpressinvoice_cron
+        restart: unless-stopped
+        tty: true
+        working_dir: /var/www/shaqexpressinvoice
+        depends_on:
+            - app
+        volumes:
+            - ./:/var/www/shaqexpressinvoice
+            - ./docker-files/cron/config/crontab:/etc/crontabs/root # Mount crontab config
+            - ./storage/logs/cron:/var/log # Mount log directory to host machine
+        networks:
+            - shaqexpressinvoice
+
+    # MinIO service
+    minio:
+        build:
+            context: .
+            dockerfile: ./docker-files/minio/Dockerfile
+        container_name: shaqexpressinvoice_minio
+        environment:
+            MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID}
+            MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
+            MINIO_BUCKET_NAME: ${AWS_BUCKET}
+        restart: unless-stopped
+        volumes:
+            - ./storage/minio/data:/data
+            - ./storage/logs/minio:/var/log/minio # Mount the logs directory
+            - ./docker-files/minio/config/start-minio.sh:/usr/local/bin/start-minio.sh # Mount the Bash script
+        ports:
+            - "8905:9000"
+            - "8907:9001" # Optional for MinIO console
+        command: /bin/sh -c "chmod +x /usr/local/bin/start-minio.sh && /usr/local/bin/start-minio.sh"
+        networks:
+            - shaqexpressinvoice
