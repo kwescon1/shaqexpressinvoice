@@ -21,3 +21,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+storage/telescope/*
+/docker-files/nginx/certs
+/storage/dbdata
+/storage/minio
+/storage/redis
