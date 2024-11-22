@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Telescope\IncomingEntry;
 use Laravel\Telescope\Telescope;
 use Laravel\Telescope\TelescopeApplicationServiceProvider;
 
-class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
+final class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
 {
     /**
      * Register any application services.
@@ -16,17 +19,32 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
     {
         // Telescope::night();
 
+        if ($this->app->environment('local') && $this->app->runningInConsole()) {
+            config(['telescope.enabled' => false]);
+        }
+
         $this->hideSensitiveRequestDetails();
 
         $isLocal = $this->app->environment('local');
 
-        Telescope::filter(function (IncomingEntry $entry) use ($isLocal) {
-            return $isLocal ||
-                   $entry->isReportableException() ||
-                   $entry->isFailedRequest() ||
-                   $entry->isFailedJob() ||
-                   $entry->isScheduledTask() ||
-                   $entry->hasMonitoredTag();
+        Telescope::filter(function (IncomingEntry $incomingEntry) use ($isLocal): bool {
+            if ($isLocal) {
+                return true;
+            }
+            if ($incomingEntry->isReportableException()) {
+                return true;
+            }
+            if ($incomingEntry->isFailedRequest()) {
+                return true;
+            }
+            if ($incomingEntry->isFailedJob()) {
+                return true;
+            }
+            if ($incomingEntry->isScheduledTask()) {
+                return true;
+            }
+
+            return $incomingEntry->hasMonitoredTag();
         });
     }
 
@@ -55,10 +73,8 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     protected function gate(): void
     {
-        Gate::define('viewTelescope', function ($user) {
-            return in_array($user->email, [
-                //
-            ]);
-        });
+        Gate::define('viewTelescope', fn (User $user): bool => in_array($user->email, [
+            //
+        ]));
     }
 }
