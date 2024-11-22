@@ -84,7 +84,7 @@ shaqexpressinvoice/
 1. Run the setup command:
 
     ```bash
-    make setup
+    make build-api
     ```
 
     This will:
@@ -95,7 +95,7 @@ shaqexpressinvoice/
 
 2. Start the application:
     ```bash
-    make up
+    make up-api
     ```
 
 ## Development Commands
