@@ -13,4 +13,6 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         // Add more routes here that require authentication
     });
+
+    // TODO add invoice stock product routes
 });
