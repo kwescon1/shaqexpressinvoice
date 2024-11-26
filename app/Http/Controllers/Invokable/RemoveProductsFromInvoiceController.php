@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
-final class AddProductToInvoiceController
+final class RemoveProductsFromInvoiceController
 {
     public function __construct(private ManagesItem $manageInvoice, private ProvidesLatestInvoice $latestUserInvoice) {}
 
@@ -34,7 +34,7 @@ final class AddProductToInvoiceController
             $invoice = $this->latestUserInvoice->latestCreatedInvoice($user);
         }
         /** @phpstan-ignore-next-line */
-        $this->manageInvoice->addItem($invoice, $product);
+        $this->manageInvoice->removeItems($invoice);
 
         return response()->noContent();
     }

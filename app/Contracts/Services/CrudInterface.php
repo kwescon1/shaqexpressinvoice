@@ -19,10 +19,9 @@ interface CrudInterface
     /**
      * Retrieve a paginated list of resources.
      *
-     * @param  int|null  $perPage  Number of items per page. Defaults to 15.
      * @return LengthAwarePaginator<T> Paginated list of resources.
      */
-    public function index(?int $perPage = 15): LengthAwarePaginator;
+    public function index(): LengthAwarePaginator;
 
     /**
      * Store a new resource.

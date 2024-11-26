@@ -5,8 +5,14 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\InvoiceStatus;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
+
+use function Illuminate\Support\enum_value;
 
 final class Invoice extends Base
 {
@@ -21,16 +27,66 @@ final class Invoice extends Base
         'status' => InvoiceStatus::class, // Cast status to InvoiceStatus enum
     ];
 
-    public function user()
+    /**
+     * Get the user who created the invoice.
+     *
+     * @return BelongsTo<User, Invoice>
+     */
+    public function user(): BelongsTo
     {
+        /** @var BelongsTo<User, Invoice> */
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function products()
+    /**
+     * Get the products associated with the invoice.
+     *
+     * @return BelongsToMany<Product,Invoice>
+     */
+    public function products(): BelongsToMany
     {
+        /** @var BelongsToMany<Product,Invoice> */
         return $this->belongsToMany(Product::class, 'invoice_product')
             ->withPivot('quantity', 'price') // Include extra fields
             ->withTimestamps();
+    }
+
+    /**
+     * Scope a query to only include invoices that are open.
+     */
+    public function scopeOpen(Builder $query): Builder
+    {
+        return $query->whereStatus(enum_value(InvoiceStatus::OPEN)); // Adjust based on your actual status logic
+    }
+
+    /**
+     * Determine if the invoice is open.
+     */
+    public function isOpen(): bool
+    {
+        return $this->status->value === enum_value(InvoiceStatus::OPEN);
+    }
+
+    protected static function booted(): void
+    {
+        // When an invoice is created
+        self::created(function (Invoice $invoice): void {
+            // Cache the created invoice as the "current_invoice" for the user
+            Cache::put('current_invoice', $invoice, now()->addHour());
+        });
+        // When an invoice is updated
+        self::updated(function (Invoice $invoice): void {
+            if (in_array($invoice->status->value, [enum_value(InvoiceStatus::FINALIZED), enum_value(InvoiceStatus::CANCELLED)], true)) {
+                // Remove the invoice from the cache if the status is "closed" or "cancelled"
+                Cache::forget('current_invoice');
+            }
+        });
+
+        // When an invoice is deleted
+        self::deleted(function (Invoice $invoice): void {
+            // Remove the invoice from the cache
+            Cache::forget('current_invoice');
+        });
     }
 
     /**

@@ -12,6 +12,13 @@ abstract class Base extends Model
     use HasUuids;
 
     /**
+     * The attributes that aren't mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $guarded = ['id'];
+
+    /**
      * The attributes that should be hidden for arrays and JSON serialization.
      *
      * @var list<string>

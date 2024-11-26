@@ -6,12 +6,12 @@ namespace App\Models;
 
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-final class Product extends Model
+final class Product extends Base
 {
     /** @use HasFactory<ProductFactory> */
     use HasFactory,SoftDeletes;
@@ -59,8 +59,14 @@ final class Product extends Model
         return $this->hasOne(Stock::class, 'product_id');
     }
 
-    public function invoices()
+    /**
+     * The invoices associated with this product.
+     *
+     * @return BelongsToMany<Invoice, Product>
+     */
+    public function invoices(): BelongsToMany
     {
+        /** @var BelongsToMany<Invoice, Product> */
         return $this->belongsToMany(Invoice::class, 'invoice_product')
             ->withPivot('quantity', 'price') // Include extra fields
             ->withTimestamps();

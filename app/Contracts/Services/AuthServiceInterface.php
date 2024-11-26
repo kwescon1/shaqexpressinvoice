@@ -17,7 +17,7 @@ interface AuthServiceInterface
      * Login an existing user and generate an authentication token.
      *
      * @param  User  $user  The authenticated user.
-     * @return array<string, mixed> An array containing the user resource and the authentication token.
+     * @return array{user: User, token: string} An array containing the user resource and the authentication token.
      */
     public function login(User $user): array;
 }

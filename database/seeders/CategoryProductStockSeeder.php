@@ -38,7 +38,6 @@ final class CategoryProductStockSeeder extends Seeder
         // Step 3: Create Products and Their Stock for Each Category
         $categories->each(function ($category) use ($branches) {
             for ($i = 0; $i < 2; $i++) {
-
                 Product::factory()
                     ->count(50) // Create 50 products per category
                     ->for($category) // Associate each product with the category
@@ -53,7 +52,6 @@ final class CategoryProductStockSeeder extends Seeder
                         $this->command->info("Stock for product '{$product->name}' in branch '{$product->branch->name}' seeded successfully!");
                     });
             }
-
         });
 
         $this->command->info('All categories, products, and stock seeded successfully!');

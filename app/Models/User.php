@@ -9,6 +9,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -40,6 +41,7 @@ final class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
+        'id',
         'password',
         'remember_token',
     ];
@@ -92,14 +94,34 @@ final class User extends Authenticatable
      *
      * @return BelongsTo<Branch, User>
      */
-    public function branch(): BelongsTo
+    public function facilityBranches(): BelongsTo
     {
         /** @var BelongsTo<Branch, User> */
         return $this->belongsTo(Branch::class, 'branch_id');
     }
 
-    public function invoices()
+    /**
+     * The branch the user belongs to.
+     *
+     * @return HasMany<Invoice, User>
+     */
+    public function invoices(): HasMany
     {
+        /** @var HasMany<Invoice, User> */
         return $this->hasMany(Invoice::class, 'created_by');
+    }
+
+    /**
+     * Boot the model and define event handlers.
+     */
+    protected static function booted(): void
+    {
+        self::updated(function (User $user): void {
+            cache()->forget('user_'.(string) $user->getKey());
+        });
+
+        self::deleted(function (User $user): void {
+            cache()->forget('user_'.(string) $user->getKey());
+        });
     }
 }

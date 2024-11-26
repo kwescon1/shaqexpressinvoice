@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Exceptions\UniqueConstraintException;
 use App\Http\Middleware\EnforceJson;
 use App\Http\Middleware\FirewallMiddleware;
 use Illuminate\Auth\AuthenticationException;
@@ -41,6 +42,8 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->renderable(fn (NotFoundHttpException $notFoundHttpException) => response()->notfound($notFoundHttpException->getMessage()));
+
+        $exceptions->renderable(fn (UniqueConstraintException $uniqueConstraintViolationException) => response()->simplerror($uniqueConstraintViolationException->getMessage(), Response::HTTP_CONFLICT));
 
         $exceptions->renderable(fn (AuthenticationException $authenticationException) => response()->simplerror($authenticationException->getMessage(), Response::HTTP_UNAUTHORIZED));
 

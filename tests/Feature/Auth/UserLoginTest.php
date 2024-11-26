@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use Illuminate\Support\Str;
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Generate random password
     $this->password = Str::password();
 
@@ -24,7 +24,7 @@ beforeEach(function () {
     User::create($this->user);
 });
 
-it('logs in a user, generates token, and returns a login successful message', function () {
+it('logs in a user, generates token, and returns a login successful message', function (): void {
     $this->assertDatabaseHas('users', [
         'name' => $this->user['name'],
     ]);
@@ -38,7 +38,7 @@ it('logs in a user, generates token, and returns a login successful message', fu
     expect($response->json('data'))->toHaveKeys(['user', 'token']);
 });
 
-it('throws an unauthorized error when input is invalid', function () {
+it('throws an unauthorized error when input is invalid', function (): void {
     $response = ($this->loginUser)(($this->loginData)($this->user['email'], Str::random(12)));
 
     $response->assertUnauthorized()->assertJsonPath('error', __('auth.failed'));

@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Hash;
+use LogicException;
 
 final class LoginUserRequest extends FormRequest
 {
@@ -38,9 +39,9 @@ final class LoginUserRequest extends FormRequest
     }
 
     /**
-     * Retrieve the validated email input.
+     * Retrieve the sanitized email input.
      */
-    public function getSanitizedEmailInput(): string
+    public function sanitizedEmail(): string
     {
         return (string) $this->validated()['email'];
     }
@@ -48,66 +49,68 @@ final class LoginUserRequest extends FormRequest
     /**
      * Retrieve the validated password input.
      */
-    public function getValidatedPassword(): string
+    public function validatedPassword(): string
     {
         return (string) $this->validated()['password'];
     }
 
     /**
-     * Find the user by the email field.
+     * Find the user by the sanitized email field.
      *
-     * This method uses the email input to search for the user in the database.
-     * If a user is found, it returns the user object; otherwise, it returns null.
+     * @return User|null The user object if found, or null otherwise.
      */
     public function findUser(): ?User
     {
-        return User::where('email', $this->getSanitizedEmailInput())->first();
+        return User::whereEmail($this->sanitizedEmail())->first();
     }
 
     /**
-     * Check if the provided password matches the stored password.
+     * Check if the provided password matches the stored hashed password.
+     *
+     * @param  User  $user  The user whose password is being validated.
+     * @return bool Whether the passwords match.
      */
-    public function checkPassword(User $user): bool
+    public function validatePassword(User $user): bool
     {
-        return Hash::check($this->getValidatedPassword(), $user->password);
+        return Hash::check($this->validatedPassword(), (string) $user->password);
     }
 
     /**
      * Validate the user's credentials.
      *
-     * @throws AuthenticationException
+     * @throws AuthenticationException If the user is not found or the password is invalid.
      */
-    public function validateUserCredentials(): void
+    public function validateCredentials(): void
     {
         $user = $this->findUser();
 
-        // Check if the user exists and the password matches
-        if (! $user || ! $this->checkPassword($user)) {
+        if (! $user || ! $this->validatePassword($user)) {
             throw new AuthenticationException(__('auth.failed'));
         }
 
-        // Store the validated user
         $this->user = $user;
     }
 
     /**
-     * Get the validated user.
+     * Retrieve the validated user after ensuring credentials are valid.
+     *
+     * @return User The validated user.
      */
     public function validatedUser(): User
     {
-        // Ensure credentials are validated before returning the user
         if (! $this->user) {
-            $this->validateUserCredentials();
+            $this->validateCredentials();
+        }
+
+        if (! $this->user instanceof User) {
+            throw new LogicException('Expected an instance of User, but none was found.');
         }
 
         return $this->user;
     }
 
     /**
-     * Prepare the data for validation.
-     *
-     * This method is called before the validation rules are applied.
-     * It sanitizes the email input to ensure the data is in the correct format before validation.
+     * Prepare the data for validation by sanitizing the email input.
      */
     protected function prepareForValidation(): void
     {

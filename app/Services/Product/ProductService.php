@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Product;
 
 use App\Contracts\Services\Searchable;
+use App\Models\Branch;
 use App\Models\Product;
 use Illuminate\Support\Collection;
 
@@ -21,17 +22,17 @@ final class ProductService implements Searchable
     }
 
     /**
-     * Search for products based on name and branch ID.
+     * Search for products based on branch and name.
      *
-     * @param  int  $branchId  The branch ID to filter products.
+     * @param  Branch  $branch  The branch where the product belongs.
      * @param  string  $query  The search query string (product name).
      * @return Collection<int, Product> The search results as a collection.
      */
-    public function search(int $branchId, string $query): Collection
+    public function search(Branch $branch, string $query): Collection
     {
         return $this->product
             ->newQuery()
-            ->where('branch_id', $branchId) // Filter by branch ID
+            ->whereBelongsTo($branch) // Filter by the branch relationship
             ->where('name', 'like', '%'.$query.'%') // Search by name
             ->get(); // Return as a collection
     }

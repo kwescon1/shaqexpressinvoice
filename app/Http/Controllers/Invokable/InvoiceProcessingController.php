@@ -4,23 +4,22 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Invokable;
 
-use App\Contracts\Services\ManagesItem;
+use App\Contracts\Services\ProcessInvoice;
 use App\Contracts\Services\ProvidesLatestInvoice;
 use App\Models\Product;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
-final class AddProductToInvoiceController
+final class InvoiceProcessingController
 {
-    public function __construct(private ManagesItem $manageInvoice, private ProvidesLatestInvoice $latestUserInvoice) {}
+    public function __construct(private ProcessInvoice $invoice, private ProvidesLatestInvoice $latestUserInvoice) {}
 
     /**
      * Handle adding a product to an invoice.
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function __invoke(Request $request, Product $product)
+    public function __invoke(Request $request, Product $product): JsonResponse
     {
         // TODO refactor cache keys into enums or constant class to avoid errors
         $invoice = Cache::get('current_invoice');
@@ -34,8 +33,8 @@ final class AddProductToInvoiceController
             $invoice = $this->latestUserInvoice->latestCreatedInvoice($user);
         }
         /** @phpstan-ignore-next-line */
-        $this->manageInvoice->addItem($invoice, $product);
+        $invoice = $this->invoice->processInvoice($invoice);
 
-        return response()->noContent();
+        return response()->success(__('app.operation_successful'), $invoice);
     }
 }
