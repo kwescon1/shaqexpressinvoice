@@ -14,6 +14,7 @@ use App\Contracts\Services\ManagesItem;
 use App\Contracts\Services\ProcessInvoice;
 use App\Contracts\Services\ProvidesLatestInvoice;
 use App\Contracts\Services\Searchable;
+use App\Contracts\Services\Sellable;
 use App\Contracts\Services\UpdateInvoiceItemQuantity;
 use App\Http\Controllers\InvoiceController;
 use App\Services\Auth\AuthService;
@@ -21,6 +22,7 @@ use App\Services\Firewall;
 use App\Services\Invoice\InvoiceNumberService;
 use App\Services\Invoice\InvoiceService;
 use App\Services\Product\ProductService;
+use App\Services\Product\SoldProductService;
 use Illuminate\Support\ServiceProvider;
 
 final class BindingServiceProvider extends ServiceProvider
@@ -39,6 +41,7 @@ final class BindingServiceProvider extends ServiceProvider
         $this->app->bind(ProcessInvoice::class, InvoiceService::class);
         $this->app->bind(QueryInvoice::class, InvoiceQueryBuilder::class);
         $this->app->bind(GeneratesInvoiceNumber::class, InvoiceNumberService::class);
+        $this->app->bind(Sellable::class, SoldProductService::class);
 
         $this->app->when(InvoiceController::class)
             ->needs(CrudInterface::class)

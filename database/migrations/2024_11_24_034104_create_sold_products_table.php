@@ -15,21 +15,15 @@ return new class extends Migration
     {
         Schema::create('sold_products', function (Blueprint $table) {
             $table->id();
+            $table->uuid();
+            $table->foreignId('invoice_id')->constrained('invoices')->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
+            $table->integer('quantity'); // quantity bought
+            $table->integer('price'); // Price of the product at the time of adding
             $table->timestamps();
+            $table->softDeletes();
         });
     }
-
-    // Schema::create('sold_inventory_items', function (Blueprint $table) {
-    //     $table->bigInteger('id')->primary()->unsigned();
-    //     $table->foreignId('facility_id')->constrained('facilities')->onUpdate('cascade')->onDelete('cascade');
-    //     $table->foreignId('facility_branch_id')->constrained('facility_branches')->onUpdate('cascade')->onDelete('cascade');
-    //     $table->foreignId('receipt_id')->nullable()->constrained('receipts')->onUpdate('cascade')->onDelete('cascade');
-    //     $table->foreignId('invoice_id')->nullable()->constrained('invoices')->onUpdate('cascade')->onDelete('cascade');
-    //     $table->foreignId('item_id')->constrained('inventory_items')->onUpdate('cascade')->onDelete('cascade');
-    //     $table->decimal('price');
-    //     $table->integer('quantity');
-    //     $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
-    // });
 
     /**
      * Reverse the migrations.

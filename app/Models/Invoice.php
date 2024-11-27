@@ -9,6 +9,7 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 
@@ -89,12 +90,24 @@ final class Invoice extends Base
         return $this->status->value === enum_value(InvoiceStatus::OPEN);
     }
 
+    /**
+     * Get the sold products associated with the invoice.
+     *
+     * @return HasMany<SoldProduct,Invoice>
+     */
+    public function soldProducts(): HasMany
+    {
+        /** @var HasMany<SoldProduct,Invoice> */
+        return $this->hasMany(SoldProduct::class, 'invoice_id');
+    }
+
     protected static function booted(): void
     {
         // When an invoice is created
         self::created(function (Invoice $invoice): void {
+            $refreshed = $invoice->refresh();
             // Cache the created invoice as the "current_invoice" for the user
-            Cache::put('current_invoice', $invoice, now()->addHour());
+            Cache::put('current_invoice', $refreshed, now()->addHour());
         });
         // When an invoice is updated
         self::updated(function (Invoice $invoice): void {

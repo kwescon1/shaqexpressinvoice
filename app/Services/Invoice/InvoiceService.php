@@ -13,6 +13,7 @@ use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\User;
 use Facades\App\Contracts\Services\GeneratesInvoiceNumber;
+use Facades\App\Contracts\Services\Sellable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -253,8 +254,15 @@ final class InvoiceService implements CrudInterface, ManagesItem, ProcessInvoice
                 'status' => enum_value(InvoiceStatus::FINALIZED),
             ]);
 
+            $refreshed = $invoiceWithRelations->refresh();
+
+            Sellable::soldProducts($invoiceWithRelations);
+
+            // Detach all products from the invoice using
+            $this->removeItems($invoiceWithRelations);
+
             // Return the refreshed invoice
-            return $invoiceWithRelations->refresh();
+            return $refreshed;
         });
     }
 

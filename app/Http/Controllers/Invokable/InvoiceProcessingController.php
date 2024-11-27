@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Invokable;
 
 use App\Contracts\Builders\QueryInvoice;
 use App\Contracts\Services\ProcessInvoice;
+use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +26,6 @@ final class InvoiceProcessingController
     public function __invoke(Request $request, Product $product): JsonResponse
     {
         // TODO refactor cache keys into enums or constant class to avoid errors
-        $invoice = Cache::get('current_invoice');
 
         $user = Auth::user();
 
@@ -35,6 +35,8 @@ final class InvoiceProcessingController
 
         $branch = $user->facilityBranches;
 
+        $invoice = Cache::get('current_invoice');
+
         // If the invoice is not found in the cache, retrieve the latest created invoice for the user
         if (! $invoice) {
             /** @phpstan-ignore-next-line */
@@ -43,6 +45,10 @@ final class InvoiceProcessingController
             if (! $invoice) {
                 throw new RuntimeException('No available invoice');
             }
+        }
+
+        if (! $invoice instanceof Invoice) {
+            throw new LogicException('invoice not invoice model instance');
         }
 
         $invoice = $this->invoice->processInvoice($invoice);
