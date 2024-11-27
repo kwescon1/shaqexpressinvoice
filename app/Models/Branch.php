@@ -48,6 +48,17 @@ final class Branch extends Base
     }
 
     /**
+     * Get the invoices associated with this branch.
+     *
+     * @return HasMany<Invoice, Branch>
+     */
+    public function invoices(): HasMany
+    {
+        /** @var HasMany<Invoice, Branch> */
+        return $this->hasMany(Invoice::class, 'branch_id');
+    }
+
+    /**
      * The products associated with this branch.
      *
      * @return HasMany<Product, Branch>

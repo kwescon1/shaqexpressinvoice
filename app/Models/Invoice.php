@@ -39,6 +39,28 @@ final class Invoice extends Base
     }
 
     /**
+     * Get the facility associated to this invoice.
+     *
+     * @return BelongsTo<Facility, Invoice>
+     */
+    public function facility(): BelongsTo
+    {
+        /** @var BelongsTo<Facility, Invoice> */
+        return $this->belongsTo(User::class, 'facility_id');
+    }
+
+    /**
+     * Get the branch associated to this invoice.
+     *
+     * @return BelongsTo<Branch, Invoice>
+     */
+    public function branch(): BelongsTo
+    {
+        /** @var BelongsTo<Branch, Invoice> */
+        return $this->belongsTo(User::class, 'branch_id');
+    }
+
+    /**
      * Get the products associated with the invoice.
      *
      * @return BelongsToMany<Product,Invoice>

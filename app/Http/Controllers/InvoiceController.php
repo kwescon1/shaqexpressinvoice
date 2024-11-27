@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Contracts\Services\CrudInterface;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use LogicException;
 
 final class InvoiceController
 {
@@ -29,8 +32,14 @@ final class InvoiceController
      */
     public function store(Request $request): JsonResponse
     {
+        // Get the currently authenticated user
+        $user = Auth::user();
 
-        $invoice = $this->invoiceService->store();
+        if (! $user instanceof User) {
+            throw new LogicException('The authenticated user is not a valid User instance.');
+        }
+
+        $invoice = $this->invoiceService->store($user);
 
         return response()->created(__('app.resource_created'), $invoice);
     }

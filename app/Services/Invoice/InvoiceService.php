@@ -7,18 +7,16 @@ namespace App\Services\Invoice;
 use App\Contracts\Services\CrudInterface;
 use App\Contracts\Services\ManagesItem;
 use App\Contracts\Services\ProcessInvoice;
-use App\Contracts\Services\ProvidesLatestInvoice;
 use App\Enums\InvoiceStatus;
 use App\Exceptions\UniqueConstraintException;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\User;
+use Facades\App\Contracts\Services\GeneratesInvoiceNumber;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use LogicException;
@@ -29,7 +27,7 @@ use function Illuminate\Support\enum_value;
 /**
  * @implements CrudInterface<Invoice>
  */
-final class InvoiceService implements CrudInterface, ManagesItem, ProcessInvoice, ProvidesLatestInvoice
+final class InvoiceService implements CrudInterface, ManagesItem, ProcessInvoice
 {
     /**
      * Create a new Invoice instance.
@@ -39,19 +37,32 @@ final class InvoiceService implements CrudInterface, ManagesItem, ProcessInvoice
      */
     public function __construct(private Invoice $invoice, private int $perPage = 20) {}
 
-    public function store(?array $data = null): Invoice
+    public function store(?User $user = null, ?array $data = null): Invoice
     {
-        // Get the currently authenticated user
-        $user = Auth::user();
-
         if (! $user instanceof User) {
             throw new LogicException('The authenticated user is not a valid User instance.');
         }
 
-        // Create the invoice using the relationship
-        $invoice = $user->invoices()->create($data ?? []);
+        $facility = $user->facility;
+        $branch = $user->facilityBranches;
 
-        return $invoice;
+        if ($facility === null) {
+            throw new LogicException('The user is not associated with a valid facility.');
+        }
+
+        if ($branch === null) {
+            throw new LogicException('The user is not associated with a valid branch.');
+        }
+
+        // Generate the invoice number
+        $invoiceNumber = GeneratesInvoiceNumber::generateInvoiceNumber($facility, $branch);
+
+        // Create the invoice using the relationship
+        return $user->invoices()->create([
+            'invoice_number' => $invoiceNumber,
+            'facility_id' => $facility->getKey(),
+            'branch_id' => $branch->getKey(),
+        ]);
     }
 
     /**
@@ -170,17 +181,6 @@ final class InvoiceService implements CrudInterface, ManagesItem, ProcessInvoice
     public function removeItems(Invoice $invoice): void
     {
         $invoice->products()->detach();
-    }
-
-    public function latestCreatedInvoice(User $user): ?Invoice
-    {
-        /** @phpstan-ignore-next-line */
-        return Cache::remember('current_invoice', now()->addHour(), function () use ($user) {
-            $invoice = $user->invoices()->latest()->first();
-
-            // Ensure the returned value is an instance of Invoice or null
-            return $invoice instanceof Invoice ? $invoice : null;
-        });
     }
 
     /**
@@ -303,6 +303,6 @@ final class InvoiceService implements CrudInterface, ManagesItem, ProcessInvoice
      */
     private function itemExists(Invoice $invoice, Product $product): ?Product
     {
-        return $invoice->products()->whereProductId($product->getKey())->first();
+        return $invoice->products()->whereKey($product)->first();
     }
 }

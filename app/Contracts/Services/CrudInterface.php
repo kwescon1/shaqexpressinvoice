@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Contracts\Services;
 
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,10 +27,11 @@ interface CrudInterface
     /**
      * Store a new resource.
      *
+     * @param  User|null  $user  The user associated with the resource or null.
      * @param  array<string, mixed>|null  $data  Data for creating the resource or null.
      * @return T The newly created resource.
      */
-    public function store(?array $data = null): Model;
+    public function store(?User $user = null, ?array $data = null): Model;
 
     /**
      * Retrieve a specific resource.

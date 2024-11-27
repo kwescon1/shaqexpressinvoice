@@ -45,4 +45,15 @@ final class Facility extends Base
         /** @var HasMany<Branch, Facility> */
         return $this->hasMany(Branch::class, 'facility_id');
     }
+
+    /**
+     * Get the invoices associated with this facility.
+     *
+     * @return HasMany<Invoice, Facility>
+     */
+    public function invoices(): HasMany
+    {
+        /** @var HasMany<Invoice, Facility> */
+        return $this->hasMany(Invoice::class, 'facility_id');
+    }
 }
